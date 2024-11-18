@@ -9,29 +9,23 @@
 
 #pragma once
 
-#include "utils/utils_definitions.hpp"
-#include "creatures/creatures_definitions.hpp"
+#include "lua/scripts/luascript.hpp"
+#include "lua/scripts/scripts.hpp"
 #include "creatures/combat/combat.hpp"
+#include "utils/utils_definitions.hpp"
+#include "creatures/players/vocations/vocation.hpp"
 
 class Weapon;
 class WeaponMelee;
 class WeaponDistance;
 class WeaponWand;
-class LuaScriptInterface;
-class Combat;
-class Player;
-class Creature;
-class Item;
-class ItemType;
-class Vocation;
-class Tile;
 
 struct LuaVariant;
 
 using WeaponUnique_ptr = std::unique_ptr<Weapon>;
 using WeaponShared_ptr = std::shared_ptr<Weapon>;
 
-class Weapons {
+class Weapons final : public Scripts {
 public:
 	Weapons();
 	~Weapons();
@@ -40,7 +34,9 @@ public:
 	Weapons(const Weapons &) = delete;
 	Weapons &operator=(const Weapons &) = delete;
 
-	static Weapons &getInstance();
+	static Weapons &getInstance() {
+		return inject<Weapons>();
+	}
 
 	WeaponShared_ptr getWeapon(const std::shared_ptr<Item> &item) const;
 
@@ -56,9 +52,10 @@ private:
 
 constexpr auto g_weapons = Weapons::getInstance;
 
-class Weapon {
+class Weapon : public Script {
 public:
-	Weapon();
+	using Script::Script;
+
 	virtual void configureWeapon(const ItemType &it);
 	virtual bool interruptSwing() const {
 		return false;
@@ -164,7 +161,12 @@ public:
 		wieldInfo |= info;
 	}
 
-	void addVocWeaponMap(const std::string &vocName);
+	void addVocWeaponMap(const std::string &vocName) {
+		const int32_t vocationId = g_vocations().getVocationId(vocName);
+		if (vocationId != -1) {
+			vocWeaponMap[vocationId] = true;
+		}
+	}
 
 	const std::string &getVocationString() const {
 		return vocationString;
@@ -201,25 +203,30 @@ public:
 		return weaponType;
 	}
 
-	std::shared_ptr<Combat> getCombat() const;
+	std::shared_ptr<Combat> getCombat() const {
+		if (!m_combat) {
+			g_logger().error("Weapon::getCombat() - m_combat is nullptr");
+			return nullptr;
+		}
 
-	std::shared_ptr<Combat> getCombat();
+		return m_combat;
+	}
+
+	std::shared_ptr<Combat> getCombat() {
+		if (!m_combat) {
+			m_combat = std::make_shared<Combat>();
+		}
+
+		return m_combat;
+	}
 
 	bool calculateSkillFormula(const std::shared_ptr<Player> &player, int32_t &attackSkill, int32_t &attackValue, float &attackFactor, int16_t &elementAttack, CombatDamage &damage, bool useCharges = false) const;
-
-	LuaScriptInterface* getScriptInterface() const;
-	bool loadScriptId();
-	int32_t getScriptId() const;
-	void setScriptId(int32_t newScriptId);
-	bool isLoadedScriptId() const;
 
 protected:
 	void internalUseWeapon(const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, const std::shared_ptr<Creature> &target, int32_t damageModifier, int32_t cleavePercent = 0) const;
 	void internalUseWeapon(const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, const std::shared_ptr<Tile> &tile) const;
 
 private:
-	int32_t m_scriptId {};
-
 	virtual bool getSkillType(const std::shared_ptr<Player> &, const std::shared_ptr<Item> &, skills_t &, uint32_t &) const {
 		return false;
 	}
@@ -268,7 +275,11 @@ private:
 
 class WeaponMelee final : public Weapon {
 public:
-	explicit WeaponMelee();
+	explicit WeaponMelee(LuaScriptInterface* interface);
+
+	std::string getScriptTypeName() const override {
+		return "onUseWeapon";
+	}
 
 	void configureWeapon(const ItemType &it) override;
 
@@ -289,7 +300,11 @@ private:
 
 class WeaponDistance final : public Weapon {
 public:
-	explicit WeaponDistance();
+	explicit WeaponDistance(LuaScriptInterface* interface);
+
+	std::string getScriptTypeName() const override {
+		return "onUseWeapon";
+	}
 
 	void configureWeapon(const ItemType &it) override;
 	bool interruptSwing() const override {
@@ -314,7 +329,11 @@ private:
 
 class WeaponWand : public Weapon {
 public:
-	explicit WeaponWand();
+	using Weapon::Weapon;
+
+	std::string getScriptTypeName() const override {
+		return "onUseWeapon";
+	}
 
 	void configureWeapon(const ItemType &it) override;
 

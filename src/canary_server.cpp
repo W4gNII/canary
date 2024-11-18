@@ -9,7 +9,6 @@
 
 #include "canary_server.hpp"
 
-#include "core.hpp"
 #include "config/configmanager.hpp"
 #include "creatures/npcs/npcs.hpp"
 #include "creatures/players/grouping/familiars.hpp"
@@ -32,7 +31,8 @@
 #include "server/network/protocol/protocollogin.hpp"
 #include "server/network/protocol/protocolstatus.hpp"
 #include "server/network/webhook/webhook.hpp"
-#include "creatures/players/vocations/vocation.hpp"
+
+#include "core.hpp"
 
 CanaryServer::CanaryServer(
 	Logger &logger,
@@ -322,7 +322,6 @@ void CanaryServer::initializeDatabase() {
 	    && !DatabaseManager::optimizeTables()) {
 		logger.debug("No tables were optimized");
 	}
-	g_logger().info("Database connection established!");
 }
 
 void CanaryServer::loadModules() {

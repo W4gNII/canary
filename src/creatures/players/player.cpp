@@ -62,7 +62,6 @@
 #include "lua/creature/events.hpp"
 #include "lua/creature/movement.hpp"
 #include "map/spectators.hpp"
-#include "creatures/players/vocations/vocation.hpp"
 
 MuteCountMap Player::muteCountMap;
 
@@ -5030,8 +5029,8 @@ ItemsTierCountList Player::getDepotChestItemsId() const {
 ItemsTierCountList Player::getDepotInboxItemsId() const {
 	ItemsTierCountList itemMap;
 
-	const auto &inboxPtr = getInbox();
-	const auto &container = inboxPtr->getContainer();
+	const auto &inbox = getInbox();
+	const auto &container = inbox->getContainer();
 	if (container) {
 		for (ContainerIterator it = container->iterator(); it.hasNext(); it.advance()) {
 			const auto &item = *it;

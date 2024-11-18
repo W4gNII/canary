@@ -11,33 +11,13 @@
 
 #include "game/game.hpp"
 #include "creatures/players/grouping/guild.hpp"
-#include "lua/functions/lua_functions_loader.hpp"
-
-void GuildFunctions::init(lua_State* L) {
-	Lua::registerSharedClass(L, "Guild", "", GuildFunctions::luaGuildCreate);
-	Lua::registerMetaMethod(L, "Guild", "__eq", Lua::luaUserdataCompare);
-
-	Lua::registerMethod(L, "Guild", "getId", GuildFunctions::luaGuildGetId);
-	Lua::registerMethod(L, "Guild", "getName", GuildFunctions::luaGuildGetName);
-	Lua::registerMethod(L, "Guild", "getMembersOnline", GuildFunctions::luaGuildGetMembersOnline);
-
-	Lua::registerMethod(L, "Guild", "getBankBalance", GuildFunctions::luaGuildGetBankBalance);
-	Lua::registerMethod(L, "Guild", "setBankBalance", GuildFunctions::luaGuildSetBankBalance);
-
-	Lua::registerMethod(L, "Guild", "addRank", GuildFunctions::luaGuildAddRank);
-	Lua::registerMethod(L, "Guild", "getRankById", GuildFunctions::luaGuildGetRankById);
-	Lua::registerMethod(L, "Guild", "getRankByLevel", GuildFunctions::luaGuildGetRankByLevel);
-
-	Lua::registerMethod(L, "Guild", "getMotd", GuildFunctions::luaGuildGetMotd);
-	Lua::registerMethod(L, "Guild", "setMotd", GuildFunctions::luaGuildSetMotd);
-}
 
 int GuildFunctions::luaGuildCreate(lua_State* L) {
-	const uint32_t id = Lua::getNumber<uint32_t>(L, 2);
+	const uint32_t id = getNumber<uint32_t>(L, 2);
 	const auto &guild = g_game().getGuild(id);
 	if (guild) {
-		Lua::pushUserdata<Guild>(L, guild);
-		Lua::setMetatable(L, -1, "Guild");
+		pushUserdata<Guild>(L, guild);
+		setMetatable(L, -1, "Guild");
 	} else {
 		lua_pushnil(L);
 	}
@@ -45,7 +25,7 @@ int GuildFunctions::luaGuildCreate(lua_State* L) {
 }
 
 int GuildFunctions::luaGuildGetId(lua_State* L) {
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (guild) {
 		lua_pushnumber(L, guild->getId());
 	} else {
@@ -56,18 +36,18 @@ int GuildFunctions::luaGuildGetId(lua_State* L) {
 
 int GuildFunctions::luaGuildGetName(lua_State* L) {
 	// guild:getName()
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
 	}
-	Lua::pushString(L, guild->getName());
+	pushString(L, guild->getName());
 	return 1;
 }
 
 int GuildFunctions::luaGuildGetMembersOnline(lua_State* L) {
 	// guild:getMembersOnline()
-	const auto &guild = Lua::getUserdataShared<const Guild>(L, 1);
+	const auto &guild = getUserdataShared<const Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
@@ -78,8 +58,8 @@ int GuildFunctions::luaGuildGetMembersOnline(lua_State* L) {
 
 	int index = 0;
 	for (const auto &player : members) {
-		Lua::pushUserdata<Player>(L, player);
-		Lua::setMetatable(L, -1, "Player");
+		pushUserdata<Player>(L, player);
+		setMetatable(L, -1, "Player");
 		lua_rawseti(L, -2, ++index);
 	}
 	return 1;
@@ -87,7 +67,7 @@ int GuildFunctions::luaGuildGetMembersOnline(lua_State* L) {
 
 int GuildFunctions::luaGuildGetBankBalance(lua_State* L) {
 	// guild:getBankBalance()
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
@@ -98,47 +78,47 @@ int GuildFunctions::luaGuildGetBankBalance(lua_State* L) {
 
 int GuildFunctions::luaGuildSetBankBalance(lua_State* L) {
 	// guild:setBankBalance(bankBalance)
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
 	}
 
-	guild->setBankBalance(Lua::getNumber<uint64_t>(L, 2));
-	Lua::pushBoolean(L, true);
+	guild->setBankBalance(getNumber<uint64_t>(L, 2));
+	pushBoolean(L, true);
 	return 1;
 }
 
 int GuildFunctions::luaGuildAddRank(lua_State* L) {
 	// guild:addRank(id, name, level)
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
 	}
-	const uint32_t id = Lua::getNumber<uint32_t>(L, 2);
-	const std::string &name = Lua::getString(L, 3);
-	const uint8_t level = Lua::getNumber<uint8_t>(L, 4);
+	const uint32_t id = getNumber<uint32_t>(L, 2);
+	const std::string &name = getString(L, 3);
+	const uint8_t level = getNumber<uint8_t>(L, 4);
 	guild->addRank(id, name, level);
-	Lua::pushBoolean(L, true);
+	pushBoolean(L, true);
 	return 1;
 }
 
 int GuildFunctions::luaGuildGetRankById(lua_State* L) {
 	// guild:getRankById(id)
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
 	}
 
-	const uint32_t id = Lua::getNumber<uint32_t>(L, 2);
+	const uint32_t id = getNumber<uint32_t>(L, 2);
 	const GuildRank_ptr rank = guild->getRankById(id);
 	if (rank) {
 		lua_createtable(L, 0, 3);
-		Lua::setField(L, "id", rank->id);
-		Lua::setField(L, "name", rank->name);
-		Lua::setField(L, "level", rank->level);
+		setField(L, "id", rank->id);
+		setField(L, "name", rank->name);
+		setField(L, "level", rank->level);
 	} else {
 		lua_pushnil(L);
 	}
@@ -147,19 +127,19 @@ int GuildFunctions::luaGuildGetRankById(lua_State* L) {
 
 int GuildFunctions::luaGuildGetRankByLevel(lua_State* L) {
 	// guild:getRankByLevel(level)
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
 	}
 
-	const uint8_t level = Lua::getNumber<uint8_t>(L, 2);
+	const uint8_t level = getNumber<uint8_t>(L, 2);
 	const GuildRank_ptr rank = guild->getRankByLevel(level);
 	if (rank) {
 		lua_createtable(L, 0, 3);
-		Lua::setField(L, "id", rank->id);
-		Lua::setField(L, "name", rank->name);
-		Lua::setField(L, "level", rank->level);
+		setField(L, "id", rank->id);
+		setField(L, "name", rank->name);
+		setField(L, "level", rank->level);
 	} else {
 		lua_pushnil(L);
 	}
@@ -168,24 +148,24 @@ int GuildFunctions::luaGuildGetRankByLevel(lua_State* L) {
 
 int GuildFunctions::luaGuildGetMotd(lua_State* L) {
 	// guild:getMotd()
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
 	}
-	Lua::pushString(L, guild->getMotd());
+	pushString(L, guild->getMotd());
 	return 1;
 }
 
 int GuildFunctions::luaGuildSetMotd(lua_State* L) {
 	// guild:setMotd(motd)
-	const auto &guild = Lua::getUserdataShared<Guild>(L, 1);
+	const auto &guild = getUserdataShared<Guild>(L, 1);
 	if (!guild) {
 		lua_pushnil(L);
 		return 1;
 	}
-	const std::string &motd = Lua::getString(L, 2);
+	const std::string &motd = getString(L, 2);
 	guild->setMotd(motd);
-	Lua::pushBoolean(L, true);
+	pushBoolean(L, true);
 	return 1;
 }

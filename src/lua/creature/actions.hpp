@@ -9,20 +9,16 @@
 
 #pragma once
 
+#include "lua/scripts/scripts.hpp"
 #include "declarations.hpp"
+#include "lua/scripts/luascript.hpp"
 
 class Action;
-class LuaScriptInterface;
-class Player;
-class Item;
-class Creature;
-class Thing;
-
 struct Position;
 
-class Action {
+class Action : public Script {
 public:
-	explicit Action();
+	explicit Action(LuaScriptInterface* interface);
 
 	// Scripting
 	virtual bool executeUse(const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, const Position &fromPosition, const std::shared_ptr<Thing> &target, const Position &toPosition, bool isHotkey);
@@ -108,14 +104,10 @@ public:
 
 	virtual std::shared_ptr<Thing> getTarget(const std::shared_ptr<Player> &player, const std::shared_ptr<Creature> &targetCreature, const Position &toPosition, uint8_t toStackPos) const;
 
-	LuaScriptInterface* getScriptInterface() const;
-	bool loadScriptId();
-	int32_t getScriptId() const;
-	void setScriptId(int32_t newScriptId);
-	bool isLoadedScriptId() const;
-
 private:
-	int32_t m_scriptId {};
+	std::string getScriptTypeName() const override {
+		return "onUse";
+	}
 
 	std::function<bool(
 		const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item,
@@ -138,7 +130,7 @@ private:
 	friend class Actions;
 };
 
-class Actions {
+class Actions final : public Scripts {
 public:
 	Actions();
 	~Actions();
@@ -147,7 +139,9 @@ public:
 	Actions(const Actions &) = delete;
 	Actions &operator=(const Actions &) = delete;
 
-	static Actions &getInstance();
+	static Actions &getInstance() {
+		return inject<Actions>();
+	}
 
 	bool useItem(const std::shared_ptr<Player> &player, const Position &pos, uint8_t index, const std::shared_ptr<Item> &item, bool isHotkey);
 	bool useItemEx(const std::shared_ptr<Player> &player, const Position &fromPos, const Position &toPos, uint8_t toStackPos, const std::shared_ptr<Item> &item, bool isHotkey, const std::shared_ptr<Creature> &creature = nullptr);

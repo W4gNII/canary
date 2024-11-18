@@ -9,9 +9,23 @@
 
 #pragma once
 
-class TeleportFunctions {
+#include "lua/scripts/luascript.hpp"
+
+class TeleportFunctions final : LuaScriptInterface {
 public:
-	static void init(lua_State* L);
+	explicit TeleportFunctions(lua_State* L) :
+		LuaScriptInterface("TeleportFunctions") {
+		init(L);
+	}
+	~TeleportFunctions() override = default;
+
+	static void init(lua_State* L) {
+		registerSharedClass(L, "Teleport", "Item", TeleportFunctions::luaTeleportCreate);
+		registerMetaMethod(L, "Teleport", "__eq", TeleportFunctions::luaUserdataCompare);
+
+		registerMethod(L, "Teleport", "getDestination", TeleportFunctions::luaTeleportGetDestination);
+		registerMethod(L, "Teleport", "setDestination", TeleportFunctions::luaTeleportSetDestination);
+	}
 
 private:
 	static int luaTeleportCreate(lua_State* L);

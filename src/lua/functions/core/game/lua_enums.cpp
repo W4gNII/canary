@@ -15,7 +15,6 @@
 #include "enums/item_attribute.hpp"
 #include "game/functions/game_reload.hpp"
 #include "io/io_bosstiary.hpp"
-#include "lua/functions/lua_functions_loader.hpp"
 
 constexpr const char* soundNamespace = "SOUND_EFFECT_TYPE_";
 
@@ -23,7 +22,7 @@ constexpr const char* soundNamespace = "SOUND_EFFECT_TYPE_";
 	{                                                            \
 		auto number = magic_enum::enum_integer(enumClassType);   \
 		auto name = magic_enum::enum_name(enumClassType).data(); \
-		Lua::registerGlobalVariable(luaState, name, number);     \
+		registerGlobalVariable(luaState, name, number);          \
 	}                                                            \
 	void(0)
 
@@ -31,15 +30,15 @@ constexpr const char* soundNamespace = "SOUND_EFFECT_TYPE_";
 	{                                                                                        \
 		auto number = magic_enum::enum_integer(enumClassType);                               \
 		auto name = std::string(luaNamespace) + magic_enum::enum_name(enumClassType).data(); \
-		Lua::registerGlobalVariable(luaState, name, number);                                 \
+		registerGlobalVariable(luaState, name, number);                                      \
 	}                                                                                        \
 	void(0)
 
-#define registerEnum(L, value)                                                                  \
-	{                                                                                           \
-		std::string enumName = #value;                                                          \
-		Lua::registerGlobalVariable(L, enumName.substr(enumName.find_last_of(':') + 1), value); \
-	}                                                                                           \
+#define registerEnum(L, value)                                                             \
+	{                                                                                      \
+		std::string enumName = #value;                                                     \
+		registerGlobalVariable(L, enumName.substr(enumName.find_last_of(':') + 1), value); \
+	}                                                                                      \
 	void(0)
 
 /**
@@ -56,7 +55,7 @@ is "SILENCE", the registered full name will be "SOUND_EFFECT_TYPE_SILENCE".
 	{                                                                                                                                 \
 		std::string enumName = #enumValue;                                                                                            \
 		std::string enumNameWithNamespace = std::string(luaNamespace) + std::string(enumName.substr(enumName.find_last_of(':') + 1)); \
-		Lua::registerGlobalVariable(L, enumNameWithNamespace, enumValue);                                                             \
+		registerGlobalVariable(L, enumNameWithNamespace, enumValue);                                                                  \
 	}                                                                                                                                 \
 	void(0)
 
@@ -793,7 +792,7 @@ void LuaEnums::initItemAttributeEnums(lua_State* L) {
 		auto number = magic_enum::enum_integer(value);
 		// Creation of the "ITEM_ATTRIBUTE_" namespace for lua scripts
 		std::string enumName = "ITEM_ATTRIBUTE_" + std::string(magic_enum::enum_name(value));
-		Lua::registerGlobalVariable(L, enumName, static_cast<lua_Number>(number));
+		registerGlobalVariable(L, enumName, static_cast<lua_Number>(number));
 	}
 }
 

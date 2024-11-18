@@ -19,7 +19,6 @@
 #include "lua/creature/events.hpp"
 #include "lua/global/globalevent.hpp"
 #include "lua/scripts/lua_environment.hpp"
-#include "lib/di/container.hpp"
 
 Signals::Signals(asio::io_service &service) :
 	set(service) {

@@ -9,9 +9,22 @@
 
 #pragma once
 
-class ItemClassificationFunctions {
+#include "lua/scripts/luascript.hpp"
+
+class ItemClassificationFunctions final : LuaScriptInterface {
 public:
-	static void init(lua_State* L);
+	explicit ItemClassificationFunctions(lua_State* L) :
+		LuaScriptInterface("ItemClassificationFunctions") {
+		init(L);
+	}
+	~ItemClassificationFunctions() override = default;
+
+	static void init(lua_State* L) {
+		registerClass(L, "ItemClassification", "", ItemClassificationFunctions::luaItemClassificationCreate);
+		registerMetaMethod(L, "ItemClassification", "__eq", ItemClassificationFunctions::luaUserdataCompare);
+
+		registerMethod(L, "ItemClassification", "addTier", ItemClassificationFunctions::luaItemClassificationAddTier);
+	}
 
 private:
 	static int luaItemClassificationCreate(lua_State* L);

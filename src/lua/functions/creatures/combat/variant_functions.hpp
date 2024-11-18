@@ -9,9 +9,23 @@
 
 #pragma once
 
-class VariantFunctions {
+#include "lua/scripts/luascript.hpp"
+
+class VariantFunctions final : LuaScriptInterface {
 public:
-	static void init(lua_State* L);
+	explicit VariantFunctions(lua_State* L) :
+		LuaScriptInterface("VariantFunctions") {
+		init(L);
+	}
+	~VariantFunctions() override = default;
+
+	static void init(lua_State* L) {
+		registerClass(L, "Variant", "", VariantFunctions::luaVariantCreate);
+
+		registerMethod(L, "Variant", "getNumber", VariantFunctions::luaVariantGetNumber);
+		registerMethod(L, "Variant", "getString", VariantFunctions::luaVariantGetString);
+		registerMethod(L, "Variant", "getPosition", VariantFunctions::luaVariantGetPosition);
+	}
 
 private:
 	static int luaVariantCreate(lua_State* L);

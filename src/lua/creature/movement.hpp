@@ -10,13 +10,12 @@
 #pragma once
 
 #include "declarations.hpp"
+#include "items/item.hpp"
+#include "lua/functions/events/move_event_functions.hpp"
+#include "lua/scripts/scripts.hpp"
+#include "creatures/players/vocations/vocation.hpp"
 
 class MoveEvent;
-class LuaScriptInterface;
-class Item;
-class Tile;
-class Creature;
-class Player;
 
 struct MoveEventList {
 	std::list<std::shared_ptr<MoveEvent>> moveEvent[MOVE_EVENT_LAST];
@@ -24,7 +23,7 @@ struct MoveEventList {
 
 using VocEquipMap = std::map<uint16_t, bool>;
 
-class MoveEvents {
+class MoveEvents final : public Scripts {
 public:
 	MoveEvents() = default;
 	~MoveEvents() = default;
@@ -33,7 +32,9 @@ public:
 	MoveEvents(const MoveEvents &) = delete;
 	MoveEvents &operator=(const MoveEvents &) = delete;
 
-	static MoveEvents &getInstance();
+	static MoveEvents &getInstance() {
+		return inject<MoveEvents>();
+	}
 
 	uint32_t onCreatureMove(const std::shared_ptr<Creature> &creature, const std::shared_ptr<Tile> &tile, MoveEvent_t eventType);
 	uint32_t onPlayerEquip(const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, Slots_t slot, bool isCheck);
@@ -128,9 +129,9 @@ private:
 
 constexpr auto g_moveEvents = MoveEvents::getInstance;
 
-class MoveEvent final : public SharedObject {
+class MoveEvent final : public Script, public SharedObject {
 public:
-	explicit MoveEvent();
+	explicit MoveEvent(LuaScriptInterface* interface);
 
 	MoveEvent_t getEventType() const;
 	void setEventType(MoveEvent_t type);
@@ -174,7 +175,12 @@ public:
 	const std::map<uint16_t, bool> &getVocEquipMap() const {
 		return vocEquipMap;
 	}
-	void addVocEquipMap(const std::string &vocName);
+	void addVocEquipMap(const std::string &vocName) {
+		const uint16_t vocationId = g_vocations().getVocationId(vocName);
+		if (vocationId != 65535) {
+			vocEquipMap[vocationId] = true;
+		}
+	}
 	bool getTileItem() const {
 		return tileItem;
 	}
@@ -239,15 +245,8 @@ public:
 	static uint32_t EquipItem(const std::shared_ptr<MoveEvent> &moveEvent, const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, Slots_t slot, bool boolean);
 	static uint32_t DeEquipItem(const std::shared_ptr<MoveEvent> &, const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, Slots_t slot, bool boolean);
 
-	std::string getScriptTypeName() const;
-	bool loadScriptId();
-	int32_t getScriptId() const;
-	void setScriptId(int32_t newScriptId);
-	bool isLoadedScriptId() const;
-	LuaScriptInterface* getScriptInterface() const;
-
 private:
-	int32_t m_scriptId {};
+	std::string getScriptTypeName() const override;
 
 	uint32_t slot = SLOTP_WHEREEVER;
 

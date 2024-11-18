@@ -9,8 +9,16 @@
 
 #pragma once
 
-class LoggerFunctions {
+#include "lua/scripts/luascript.hpp"
+
+class LoggerFunctions final : public LuaScriptInterface {
 public:
+	explicit LoggerFunctions(lua_State* L) :
+		LuaScriptInterface("LoggerFunctions") {
+		init(L);
+	}
+	~LoggerFunctions() override = default;
+
 	static void init(lua_State* L);
 
 private:

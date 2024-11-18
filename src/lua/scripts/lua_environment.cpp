@@ -13,13 +13,8 @@
 #include "lua/functions/lua_functions_loader.hpp"
 #include "lua/scripts/script_environment.hpp"
 #include "lua/global/lua_timer_event_descr.hpp"
-#include "lib/di/container.hpp"
 
 bool LuaEnvironment::shuttingDown = false;
-
-LuaEnvironment &LuaEnvironment::getInstance() {
-	return inject<LuaEnvironment>();
-}
 
 static const std::unique_ptr<AreaCombat> &AreaCombatNull {};
 
@@ -48,7 +43,7 @@ lua_State* LuaEnvironment::getLuaState() {
 
 bool LuaEnvironment::initState() {
 	luaState = luaL_newstate();
-	Lua::load(luaState);
+	LuaFunctionsLoader::load(luaState);
 	runningEventId = EVENT_ID_USER;
 
 	return true;
@@ -65,6 +60,10 @@ bool LuaEnvironment::closeState() {
 		return false;
 	}
 
+	for (const auto &combatEntry : combatIdMap) {
+		clearCombatObjects(combatEntry.first);
+	}
+
 	for (const auto &areaEntry : areaIdMap) {
 		clearAreaObjects(areaEntry.first);
 	}
@@ -77,6 +76,7 @@ bool LuaEnvironment::closeState() {
 		luaL_unref(luaState, LUA_REGISTRYINDEX, timerEventDesc.function);
 	}
 
+	combatIdMap.clear();
 	areaIdMap.clear();
 	timerEvents.clear();
 	cacheFiles.clear();
@@ -92,6 +92,31 @@ LuaScriptInterface* LuaEnvironment::getTestInterface() {
 		testInterface->initState();
 	}
 	return testInterface;
+}
+
+std::shared_ptr<Combat> LuaEnvironment::getCombatObject(uint32_t id) const {
+	const auto it = combatMap.find(id);
+	if (it == combatMap.end()) {
+		return nullptr;
+	}
+	return it->second;
+}
+
+std::shared_ptr<Combat> LuaEnvironment::createCombatObject(LuaScriptInterface* interface) {
+	auto combat = std::make_shared<Combat>();
+	combatMap[++lastCombatId] = combat;
+	combatIdMap[interface].push_back(lastCombatId);
+	return combat;
+}
+
+void LuaEnvironment::clearCombatObjects(LuaScriptInterface* interface) {
+	const auto it = combatIdMap.find(interface);
+	if (it == combatIdMap.end()) {
+		return;
+	}
+
+	it->second.clear();
+	combatMap.clear();
 }
 
 const std::unique_ptr<AreaCombat> &LuaEnvironment::getAreaObject(uint32_t id) const {

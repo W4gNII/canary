@@ -10,16 +10,19 @@
 #pragma once
 
 #include "account/account.hpp"
+#include "lua/global/baseevents.hpp"
 #include "utils/utils_definitions.hpp"
 #include "declarations.hpp"
+#include "lua/scripts/luascript.hpp"
+#include "lua/scripts/scripts.hpp"
 
-class Player;
-class LuaScriptInterface;
 class TalkAction;
 using TalkAction_ptr = std::shared_ptr<TalkAction>;
 
-class TalkAction final {
+class TalkAction final : public Script {
 public:
+	using Script::Script;
+
 	const std::string &getWords() const {
 		return m_word;
 	}
@@ -55,14 +58,10 @@ public:
 	void setGroupType(uint8_t newGroupType);
 	const uint8_t &getGroupType() const;
 
-	LuaScriptInterface* getScriptInterface() const;
-	bool loadScriptId();
-	int32_t getScriptId() const;
-	void setScriptId(int32_t newScriptId);
-	bool isLoadedScriptId() const;
-
 private:
-	int32_t m_scriptId {};
+	std::string getScriptTypeName() const override {
+		return "onSay";
+	}
 
 	std::string m_word;
 	std::string m_description;
@@ -70,7 +69,7 @@ private:
 	uint8_t m_groupType = 0;
 };
 
-class TalkActions {
+class TalkActions final : public Scripts {
 public:
 	TalkActions();
 	~TalkActions();
@@ -79,7 +78,9 @@ public:
 	TalkActions(const TalkActions &) = delete;
 	TalkActions &operator=(const TalkActions &) = delete;
 
-	static TalkActions &getInstance();
+	static TalkActions &getInstance() {
+		return inject<TalkActions>();
+	}
 
 	bool checkWord(const std::shared_ptr<Player> &player, SpeakClasses type, const std::string &words, std::string_view word, const TalkAction_ptr &talkActionPtr) const;
 	TalkActionResult_t checkPlayerCanSayTalkAction(const std::shared_ptr<Player> &player, SpeakClasses type, const std::string &words) const;

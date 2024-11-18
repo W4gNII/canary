@@ -9,9 +9,33 @@
 
 #pragma once
 
-class CharmFunctions {
+#include "lua/scripts/luascript.hpp"
+
+class CharmFunctions final : LuaScriptInterface {
 public:
-	static void init(lua_State* L);
+	explicit CharmFunctions(lua_State* L) :
+		LuaScriptInterface("CharmFunctions") {
+		init(L);
+	}
+	~CharmFunctions() override = default;
+
+	static void init(lua_State* L) {
+		registerSharedClass(L, "Charm", "", CharmFunctions::luaCharmCreate);
+		registerMetaMethod(L, "Charm", "__eq", CharmFunctions::luaUserdataCompare);
+
+		registerMethod(L, "Charm", "name", CharmFunctions::luaCharmName);
+		registerMethod(L, "Charm", "description", CharmFunctions::luaCharmDescription);
+		registerMethod(L, "Charm", "type", CharmFunctions::luaCharmType);
+		registerMethod(L, "Charm", "points", CharmFunctions::luaCharmPoints);
+		registerMethod(L, "Charm", "damageType", CharmFunctions::luaCharmDamageType);
+		registerMethod(L, "Charm", "percentage", CharmFunctions::luaCharmPercentage);
+		registerMethod(L, "Charm", "chance", CharmFunctions::luaCharmChance);
+		registerMethod(L, "Charm", "messageCancel", CharmFunctions::luaCharmMessageCancel);
+		registerMethod(L, "Charm", "messageServerLog", CharmFunctions::luaCharmMessageServerLog);
+		registerMethod(L, "Charm", "effect", CharmFunctions::luaCharmEffect);
+		registerMethod(L, "Charm", "castSound", CharmFunctions::luaCharmCastSound);
+		registerMethod(L, "Charm", "impactSound", CharmFunctions::luaCharmImpactSound);
+	}
 
 private:
 	static int luaCharmCreate(lua_State* L);

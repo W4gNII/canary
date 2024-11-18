@@ -11,6 +11,7 @@
 
 #include "lua/callbacks/callbacks_definitions.hpp"
 #include "lua/callbacks/event_callback.hpp"
+#include "lua/scripts/luascript.hpp"
 
 class EventCallback;
 
@@ -80,7 +81,7 @@ public:
 		}
 
 		for (const auto &entry : it->second) {
-			if (entry.callback && entry.callback->isLoadedScriptId()) {
+			if (entry.callback && entry.callback->isLoadedCallback()) {
 				std::invoke(callbackFunc, *entry.callback, args...);
 			}
 		}
@@ -101,7 +102,7 @@ public:
 		}
 
 		for (const auto &entry : it->second) {
-			if (entry.callback && entry.callback->isLoadedScriptId()) {
+			if (entry.callback && entry.callback->isLoadedCallback()) {
 				ReturnValue callbackResult = std::invoke(callbackFunc, *entry.callback, args...);
 				if (callbackResult != RETURNVALUE_NOERROR) {
 					return callbackResult;
@@ -127,7 +128,7 @@ public:
 		}
 
 		for (const auto &entry : it->second) {
-			if (entry.callback && entry.callback->isLoadedScriptId()) {
+			if (entry.callback && entry.callback->isLoadedCallback()) {
 				bool callbackResult = std::invoke(callbackFunc, *entry.callback, args...);
 				allCallbacksSucceeded &= callbackResult;
 			}

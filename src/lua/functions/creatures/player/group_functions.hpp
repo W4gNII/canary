@@ -9,9 +9,28 @@
 
 #pragma once
 
-class GroupFunctions {
+#include "lua/scripts/luascript.hpp"
+
+class GroupFunctions final : LuaScriptInterface {
 public:
-	static void init(lua_State* L);
+	explicit GroupFunctions(lua_State* L) :
+		LuaScriptInterface("GroupFunctions") {
+		init(L);
+	}
+	~GroupFunctions() override = default;
+
+	static void init(lua_State* L) {
+		registerSharedClass(L, "Group", "", GroupFunctions::luaGroupCreate);
+		registerMetaMethod(L, "Group", "__eq", GroupFunctions::luaUserdataCompare);
+
+		registerMethod(L, "Group", "getId", GroupFunctions::luaGroupGetId);
+		registerMethod(L, "Group", "getName", GroupFunctions::luaGroupGetName);
+		registerMethod(L, "Group", "getFlags", GroupFunctions::luaGroupGetFlags);
+		registerMethod(L, "Group", "getAccess", GroupFunctions::luaGroupGetAccess);
+		registerMethod(L, "Group", "getMaxDepotItems", GroupFunctions::luaGroupGetMaxDepotItems);
+		registerMethod(L, "Group", "getMaxVipEntries", GroupFunctions::luaGroupGetMaxVipEntries);
+		registerMethod(L, "Group", "hasFlag", GroupFunctions::luaGroupHasFlag);
+	}
 
 private:
 	static int luaGroupCreate(lua_State* L);

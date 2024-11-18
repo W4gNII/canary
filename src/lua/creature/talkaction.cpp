@@ -13,14 +13,9 @@
 #include "creatures/players/grouping/groups.hpp"
 #include "creatures/players/player.hpp"
 #include "lua/scripts/scripts.hpp"
-#include "lib/di/container.hpp"
 
 TalkActions::TalkActions() = default;
 TalkActions::~TalkActions() = default;
-
-TalkActions &TalkActions::getInstance() {
-	return inject<TalkActions>();
-}
 
 void TalkActions::clear() {
 	talkActions.clear();
@@ -85,33 +80,6 @@ TalkActionResult_t TalkActions::checkPlayerCanSayTalkAction(const std::shared_pt
 	return TALKACTION_CONTINUE;
 }
 
-LuaScriptInterface* TalkAction::getScriptInterface() const {
-	return &g_scripts().getScriptInterface();
-}
-
-bool TalkAction::loadScriptId() {
-	LuaScriptInterface &luaInterface = g_scripts().getScriptInterface();
-	m_scriptId = luaInterface.getEvent();
-	if (m_scriptId == -1) {
-		g_logger().error("[MoveEvent::loadScriptId] Failed to load event. Script name: '{}', Module: '{}'", luaInterface.getLoadingScriptName(), luaInterface.getInterfaceName());
-		return false;
-	}
-
-	return true;
-}
-
-int32_t TalkAction::getScriptId() const {
-	return m_scriptId;
-}
-
-void TalkAction::setScriptId(int32_t newScriptId) {
-	m_scriptId = newScriptId;
-}
-
-bool TalkAction::isLoadedScriptId() const {
-	return m_scriptId != 0;
-}
-
 bool TalkAction::executeSay(const std::shared_ptr<Player> &player, const std::string &words, const std::string &param, SpeakClasses type) const {
 	// onSay(player, words, param, type)
 	if (!LuaScriptInterface::reserveScriptEnv()) {
@@ -133,7 +101,7 @@ bool TalkAction::executeSay(const std::shared_ptr<Player> &player, const std::st
 
 	LuaScriptInterface::pushString(L, words);
 	LuaScriptInterface::pushString(L, param);
-	LuaScriptInterface::pushNumber(L, static_cast<lua_Number>(type));
+	lua_pushnumber(L, type);
 
 	return getScriptInterface()->callFunction(4);
 }
